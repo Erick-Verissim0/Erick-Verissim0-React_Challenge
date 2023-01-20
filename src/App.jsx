@@ -1,83 +1,162 @@
-import { login } from './utils';
-import './index.css';
-import React from 'react';
+/*
+* CHALLENGE progresso do formulário
 
-// Instruções:
-// * Você tem um formulário de login INCOMPLETO
-// * Não é permitido adicionar novos elementos HTML
-// * Não é permitido usar refs
-//
-// Tarefas:
-// !!! Desabilite o botão de Login caso o e-mail esteja em branco OU a senha for menor que 6 dígitos.
-// !!! O botão de login deve disparar a função login(), importada no topo deste arquivo, e passar os dados necessários.
-// !!! Mostre uma mensagem de erro de login() caso o Login falhe. A mensagem deve ser limpa a cada nova tentativa de Login.
-// !!! Desabilite o botão de Login equanto você está executando o login.
-// !!! Mostre um alerta caso o login seja efetuado com sucesso (javascript alert). Investigue a função login() para entender como ter sucesso na requisição.
+* INSTRUÇÕES
+Neste desafio sua missão é criar um formulário e seus 4 campos (com controlled inputs),
+juntamente com uma barra de progresso que altera-se conforme o usuário preenche os campos.
+- Crie também validações para cada campo conforme instruções abaixo.
 
-export default function LoginForm() {
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState(null);
-  const [showButton, setShowButton] = React.useState(false);
+* BARRA DE PROGRESSO
+Para aproveitar estilização já definida, crie:
+- a barra com um elemento pai chamado .bar-container e seu filho .bar
 
-  const handleEmail = (event) => {
-    const { value } = event.target;
-    setEmail(value);
+* CAMPOS DO FORMULÁRIO:
+input - nome completo - válido se digitar no mínimo dois nomes,
+input - email - válido se digitar um e-mail,
+select - estado civil,
+radio - gênero
+
+Para validação de e-mail use a seguinte RegEx: /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+* FUNCIONAMENTO
+Espera-se que o formulário tenha 4 campos ao todo. Portanto, quando o usuário preencher
+o primeiro campo, a barra de progresso deve assumir 25% do tamanho total;
+o segundo campo, 50% e assim por diante...
+
+Caso o usuário não tenha definido valores para os elementos de select e radio,
+os mesmos não devem ser considerados como preenchidos até então.
+
+Se o usuário preencher um campo e apagar seu valor, este campo deve ser considerado como vazio,
+fazendo com que a barra de progresso regrida novamente.
+
+Desabilitar o botão de enviar caso todos os campos não estejam preenchidos/válidos.
+
+Ao enviar, deve-se apresentar um alert javascript com sucesso, limpar todos os campos
+do formulário e zerar a barra de progresso novamente.
+*/
+
+import React from "react";
+
+function App() {
+  const [allForms, setAllForms] = React.useState({
+    name: "",
+    email: "",
+    maritalStatus: "",
+    genre: "",
+  });
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setAllForms((prev) => {
+      const newData = { ...prev, [name]: value };
+      return newData;
+    });
   };
 
-  const handleSubmit = () => {
-    setError(null); // Sempre que sair do catch o erro irá voltar a ser nulo, que fará ele sumir da tela. Se a nova tentativa de login falhar, o erro irá sair e voltar rapidamente.
-    setShowButton(true);
+  const calculateProgress = () => {
+    let value = 0;
+    let amountToAdd = 25;
 
-    let values = { email: email, password: password };
-    login(values)
-      .then(() => {
-        alert('Login successful!');
-      })
-      .catch((error) => {
-        setError(error);
-      })
-      .finally(() => {
-        // irá executar não importa o resultado da promisse
-        setShowButton(false);
-      });
+    if (allForms.name) {
+      const explodeString = allForms.name.split(" "); // Ao encontrar o que está dentro das aspas ele cria um array separando o texto de antes com o de depois
+      if (explodeString[1]) {
+        value += amountToAdd;
+      }
+    }
+    if (allForms.email) {
+      let pattern =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+      if (pattern.test(allForms.email)) {
+        value += amountToAdd;
+      }
+    }
+    if (allForms.maritalStatus) {
+      value += amountToAdd;
+    }
+    if (allForms.genre) {
+      value += amountToAdd;
+    }
+
+    return value;
+  };
+  calculateProgress();
+
+  const handleClick = () => {
+    setAllForms({
+      name: "",
+      email: "",
+      maritalStatus: "",
+      genre: "",
+    });
+
+    alert("Registered Successfully!");
   };
 
   return (
-    <div className="wrapper">
-      <div className="login-form">
-        <h1>Login Form 🐞</h1>
-        {/* Coloque a mensagem de erro de login na div abaixo. Mostre a div somente se houver uma mensagem de erro. */}
-        {error && <div className="errorMessage"> {error.message} </div>}
-        <div className="row">
-          <label htmlFor={'email'}>Email</label>
-          <input
-            value={email}
-            onChange={handleEmail}
-            id={'email'}
-            type={'email'}
-            autoComplete="off"
-          />
-        </div>
-        <div className="row">
-          <label htmlFor={'password'}>Password</label>
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            id={'password'}
-            type={'password'}
-          />
-        </div>
+    <div className="App">
+      <h1>Challenge of Progress Form</h1>
 
-        <div className="button">
-          <button
-            disabled={email === '' || password.length < 6 || showButton}
-            onClick={handleSubmit}
-          >
-            Login
-          </button>
+      <main>
+        <div className="bar-container">
+          <div
+            className="bar"
+            style={{ width: `${calculateProgress()}%` }}
+          ></div>
         </div>
-      </div>
+        <div className="form-group">
+          <label htmlFor="">Nome Completo</label>
+          <input name="name" value={allForms.name} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="">E-mail</label>
+          <input name="email" value={allForms.email} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="">Estado Civil</label>
+          <select
+            name="maritalStatus"
+            value={allForms.maritalStatus}
+            onChange={handleChange}
+          >
+            <option value="">selecione...</option>
+            <option value="solteiro">Solteiro</option>
+            <option value="casado">Casado</option>
+            <option value="divorciado">Divorciado</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="">Gênero</label>
+          <div className="radios-container">
+            <span>
+              <input
+                type="radio"
+                name="genre"
+                value="masculino"
+                onChange={handleChange}
+                checked={allForms.genre === "masculino"}
+              />{" "}
+              Masculino
+            </span>
+            <span>
+              <input
+                type="radio"
+                name="genre"
+                value="feminino"
+                onChange={handleChange}
+                checked={allForms.genre === "feminino"}
+              />{" "}
+              Feminino
+            </span>
+          </div>
+        </div>
+        <button onClick={handleClick} disabled={calculateProgress() !== 100}>
+          Enviar Formulário
+        </button>
+      </main>
     </div>
   );
 }
+
+export default App;
